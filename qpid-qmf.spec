@@ -42,25 +42,25 @@
 #  6. If any interfaces have been removed or changed since the last
 #     public release, then set age to 0.
 
-%global QPIDCOMMON_VERSION_INFO             6:0:0
-%global QPIDTYPES_VERSION_INFO              3:0:2
-%global QPIDBROKER_VERSION_INFO             6:0:0
-%global QPIDCLIENT_VERSION_INFO             6:0:0
-%global QPIDMESSAGING_VERSION_INFO          5:0:2
-%global RDMAWRAP_VERSION_INFO               6:0:0
-%global SSLCOMMON_VERSION_INFO              6:0:0
+%global QPIDCOMMON_VERSION_INFO             7:0:0
+%global QPIDTYPES_VERSION_INFO              3:1:2
+%global QPIDBROKER_VERSION_INFO             7:0:0
+%global QPIDCLIENT_VERSION_INFO             7:0:0
+%global QPIDMESSAGING_VERSION_INFO          5:1:2
+%global RDMAWRAP_VERSION_INFO               7:0:0
+%global SSLCOMMON_VERSION_INFO              7:0:0
 
-%global QMF_VERSION_INFO                    4:0:0
-%global QMF2_VERSION_INFO                   1:0:0
-%global QMFENGINE_VERSION_INFO              4:0:0
-%global QMFCONSOLE_VERSION_INFO             5:0:0
+%global QMF_VERSION_INFO                    5:0:0
+%global QMF2_VERSION_INFO                   1:1:0
+%global QMFENGINE_VERSION_INFO              5:0:0
+%global QMFCONSOLE_VERSION_INFO             6:0:0
 
 # Single var with all lib version params (except store) for make
 %global LIB_VERSION_MAKE_PARAMS QPIDCOMMON_VERSION_INFO=%{QPIDCOMMON_VERSION_INFO} QPIDTYPES_VERSION_INFO=%{QPIDTYPES_VERSION_INFO} QPIDBROKER_VERSION_INFO=%{QPIDBROKER_VERSION_INFO} QPIDCLIENT_VERSION_INFO=%{QPIDCLIENT_VERSION_INFO} QPIDMESSAGING_VERSION_INFO=%{QPIDMESSAGING_VERSION_INFO} QMF_VERSION_INFO=%{QMF_VERSION_INFO} QMF2_VERSION_INFO=%{QMF2_VERSION_INFO} QMFENGINE_VERSION_INFO=%{QMFENGINE_VERSION_INFO} QMFCONSOLE_VERSION_INFO=%{QMFCONSOLE_VERSION_INFO} RDMAWRAP_VERSION_INFO=%{RDMAWRAP_VERSION_INFO} SSLCOMMON_VERSION_INFO=%{SSLCOMMON_VERSION_INFO}
 
 Name:          qpid-qmf
 Version:       0.14
-Release:       7%{?dist}
+Release:       14%{?dist}
 Summary:       The Qpid Management Framework
 Group:         System Environment/Libraries
 License:       ASL 2.0
@@ -289,8 +289,8 @@ rm -fr %{buildroot}%{ruby_sitearch}/*.la
 rm -rf %{buildroot}
 
 %changelog
-* Tue Apr 10 2012 Nuno Santos <nsantos@redhat.com> - 0.14-7
-- Updated mrg.patch
+* Thu Aug 16 2012 Justin Ross <jross@redhat.com> - 0.14-14
+- BZs: 693845, 773700, 806869, 847331
 * Fri Mar 16 2012 Nuno Santos <nsantos@redhat.com> - 0.14-6
 - rhbz#801358
 * Thu Mar 15 2012 Nuno Santos <nsantos@redhat.com> - 0.14-5
