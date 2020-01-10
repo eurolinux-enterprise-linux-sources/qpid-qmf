@@ -59,22 +59,23 @@
 %global LIB_VERSION_MAKE_PARAMS QPIDCOMMON_VERSION_INFO=%{QPIDCOMMON_VERSION_INFO} QPIDTYPES_VERSION_INFO=%{QPIDTYPES_VERSION_INFO} QPIDBROKER_VERSION_INFO=%{QPIDBROKER_VERSION_INFO} QPIDCLIENT_VERSION_INFO=%{QPIDCLIENT_VERSION_INFO} QPIDMESSAGING_VERSION_INFO=%{QPIDMESSAGING_VERSION_INFO} QMF_VERSION_INFO=%{QMF_VERSION_INFO} QMF2_VERSION_INFO=%{QMF2_VERSION_INFO} QMFENGINE_VERSION_INFO=%{QMFENGINE_VERSION_INFO} QMFCONSOLE_VERSION_INFO=%{QMFCONSOLE_VERSION_INFO} RDMAWRAP_VERSION_INFO=%{RDMAWRAP_VERSION_INFO} SSLCOMMON_VERSION_INFO=%{SSLCOMMON_VERSION_INFO}
 
 Name:          qpid-qmf
-Version:       0.10
-Release:       10%{?dist}
+Version:       0.12
+Release:       6%{?dist}
 Summary:       The Qpid Management Framework
 Group:         System Environment/Libraries
 License:       ASL 2.0
 URL:           http://qpid.apache.org
 Vendor:        Red Hat, Inc.
 Source0:       %{name}-%{version}.tar.gz
-Patch0:        mrg.patch
+Patch0:        unused-result.patch
 Patch1:        mutable.patch
+Patch2:        abi.patch
+Patch3:        patch3.patch
+Patch4:        patch4.patch
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %if %{rhel_5}
 ExclusiveArch: i386 x86_64
-%else
-ExclusiveArch: i686 x86_64
 %endif
 
 BuildRequires: boost-devel
@@ -156,6 +157,7 @@ components.
 %{_includedir}/qpid/console
 
 
+%ifnarch s390 s390x ppc ppc64
 # === Package: python-qpid-qmf ===
 %package -n python-qpid-qmf
 Summary:       Python QMF library for Apache Qpid
@@ -184,10 +186,12 @@ Python QMF library for Apache Qpid
 %exclude %{python_sitelib}/qpid
 #%exclude %{python_sitelib}/*.egg-info
 
+%endif
 
 %if !%{rhel_4}
 # === Package: ruby-qpid-qmf ===
 
+%ifnarch s390 s390x ppc ppc64
 %package -n ruby-qpid-qmf
 Summary:       The QPID Management Framework bindings for ruby
 Group:         System Environment/Libraries
@@ -214,6 +218,7 @@ for ruby.
 %exclude %{ruby_sitearch}/*.la
 
 %endif
+%endif
 #!%{rhel_4}
 
 
@@ -221,11 +226,14 @@ for ruby.
 
 %prep
 %setup -q
-%patch0 -p2
+%patch0 -p0
+%patch2 -p2
+%patch3 -p2
+%patch4 -p2
 %if %{rhel_4}
 (cd cpp/boost-1.32-support; make apply)
 %else
-%patch1 -p0
+#%patch1 -p0
 %endif
 
 %build
@@ -284,11 +292,52 @@ rm -fr %{buildroot}%{_datadir}
 rm -fr %{buildroot}%{python_sitelib}/qpid*.egg-info
 rm -fr %{buildroot}%{python_sitearch}/qpid*.egg-info
 
+%ifarch s390 s390x ppc ppc64
+rm -fr %{buildroot}%{python_sitearch}/qmf
+rm -fr %{buildroot}%{python_sitearch}/cqpid.py*
+rm -fr %{buildroot}%{python_sitearch}/_cqpid.so
+rm -fr %{buildroot}%{python_sitearch}/qmf.py*
+rm -fr %{buildroot}%{python_sitearch}/qmfengine.py*
+rm -fr %{buildroot}%{python_sitearch}/_qmfengine.so
+rm -fr %{buildroot}%{python_sitearch}/qmf2.py*
+rm -fr %{buildroot}%{python_sitearch}/cqmf2.py*
+rm -fr %{buildroot}%{python_sitearch}/_cqmf2.so
+rm -fr %{buildroot}%{python_sitelib}/mllib
+rm -fr %{buildroot}%{python_sitelib}/qpid
+rm -fr %{buildroot}%{ruby_sitelib}/qmf.rb
+rm -fr %{buildroot}%{ruby_sitelib}/qmf2.rb
+rm -fr %{buildroot}%{ruby_sitearch}/qmfengine.so
+rm -fr %{buildroot}%{ruby_sitearch}/cqpid.so
+rm -fr %{buildroot}%{ruby_sitearch}/cqmf2.so
+rm -fr %{buildroot}%{ruby_sitearch}/*.la
+%endif
+
 %clean
 rm -rf %{buildroot}
 
 
 %changelog
+* Tue Oct 18 2011 Ted Ross <tross@redhat.com> - 0.12-6
+- Related:rhbz#743657
+
+* Fri Sep 16 2011 Ted Ross <tross@redhat.com> - 0.12-5
+- Related:rhbz#699499 - [RFE] qmfv2 must provide mainloop integration
+
+* Mon Aug 15 2011 Ted Ross <tross@redhat.com> - 0.12-4
+- Related:rhbz#681680 - QMF agents wake up several times a second
+- Related:rhbz#699499 - [RFE] qmfv2 must provide mainloop integration
+
+* Mon Aug 15 2011 Ted Ross <tross@redhat.com> - 0.12-3
+- Related:rhbz#681680 - QMF agents wake up several times a second
+
+* Wed Aug 10 2011 Ted Ross <tross@redhat.com> - 0.12-2
+- Related:rhbz#663461 - Enable new architectures
+- Remove python-qpid-qmf and ruby-qpid-qmf from ppc and s390 architectures
+
+* Mon Aug  8 2011 Ted Ross <tross@redhat.com> - 0.12-1
+- Related:rhbz#706990 - Rebase to Qpid 0.12
+- Related:rhbz#663461 - Enable new architectures
+
 * Fri Jun  3 2011 Ted Ross <tross@redhat.com> - 0.10-10
 - Sync with the RHEL5 build
 - Related:rhbz#710483

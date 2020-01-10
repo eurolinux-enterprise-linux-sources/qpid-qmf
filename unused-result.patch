@@ -1,0 +1,84 @@
+Index: cpp/src/qpid/sys/posix/LockFile.cpp
+===================================================================
+--- cpp/src/qpid/sys/posix/LockFile.cpp	(revision 1154963)
++++ cpp/src/qpid/sys/posix/LockFile.cpp	(working copy)
+@@ -58,7 +58,7 @@
+     if (impl) {
+         int f = impl->fd;
+         if (f >= 0) {
+-            (void) ::lockf(f, F_ULOCK, 0); // Suppress warnings about ignoring return value.
++            if(::lockf(f, F_ULOCK, 0)) {} // Suppress warnings about ignoring return value.
+             ::close(f);
+             impl->fd = -1;
+         }
+Index: cpp/src/qpid/broker/Daemon.cpp
+===================================================================
+--- cpp/src/qpid/broker/Daemon.cpp	(revision 1154963)
++++ cpp/src/qpid/broker/Daemon.cpp	(working copy)
+@@ -93,13 +93,13 @@
+         catch (const exception& e) {
+             QPID_LOG(critical, "Unexpected error: " << e.what());
+             uint16_t port = 0;
+-            (void) write(pipeFds[1], &port, sizeof(uint16_t));
++            if (write(pipeFds[1], &port, sizeof(uint16_t))) {};
+ 
+             std::string pipeFailureMessage = e.what();
+-            (void) write ( pipeFds[1], 
+-                    pipeFailureMessage.c_str(), 
+-                    strlen(pipeFailureMessage.c_str())
+-                  );
++            if (write(pipeFds[1], 
++                      pipeFailureMessage.c_str(), 
++                      strlen(pipeFailureMessage.c_str())
++                      )) {};
+         }
+     }
+     else {                      // Parent
+Index: cpp/src/qmf/engine/ResilientConnection.cpp
+===================================================================
+--- cpp/src/qmf/engine/ResilientConnection.cpp	(revision 1154963)
++++ cpp/src/qmf/engine/ResilientConnection.cpp	(working copy)
+@@ -334,7 +334,7 @@
+ {
+     if (notifyFd != -1)
+     {
+-        (void) ::write(notifyFd, ".", 1);
++        if (::write(notifyFd, ".", 1)) {}
+     }
+ }
+ 
+@@ -431,7 +431,7 @@
+ 
+     if (notifyFd != -1)
+     {
+-        (void) ::write(notifyFd, ".", 1);
++        if (::write(notifyFd, ".", 1)) {}
+     }
+ }
+ 
+Index: cpp/src/tests/ForkedBroker.cpp
+===================================================================
+--- cpp/src/tests/ForkedBroker.cpp	(revision 1154963)
++++ cpp/src/tests/ForkedBroker.cpp	(working copy)
+@@ -68,7 +68,7 @@
+     }
+     if (!dataDir.empty())
+     {
+-        (void) ::system(("rm -rf "+dataDir).c_str());
++        if(::system(("rm -rf "+dataDir).c_str())) {}
+     }
+ }
+ 
+Index: cpp/src/tests/BrokerMgmtAgent.cpp
+===================================================================
+--- cpp/src/tests/BrokerMgmtAgent.cpp	(revision 1154963)
++++ cpp/src/tests/BrokerMgmtAgent.cpp	(working copy)
+@@ -604,7 +604,7 @@
+                 std::stringstream key;
+                 key << "testobj-" << i;
+                 TestManageable *tm = new TestManageable(agent, key.str());
+-                (void) tm->GetManagementObject()->writePropertiesSize();
++                if (tm->GetManagementObject()->writePropertiesSize()) {}
+                 agent->addObject(tm->GetManagementObject(), key.str());
+                 tmv.push_back(tm);
+             }

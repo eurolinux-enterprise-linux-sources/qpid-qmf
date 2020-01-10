@@ -1,3 +1,6 @@
+#ifndef QPID_DISABLEEXCEPTIONLOGGING_H
+#define QPID_DISABLEEXCEPTIONLOGGING_H
+
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -7,9 +10,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,34 +21,19 @@
  * under the License.
  *
  */
-#include "qpid/broker/RateTracker.h"
-
-using qpid::sys::AbsTime;
-using qpid::sys::Duration;
-using qpid::sys::TIME_SEC;
+#include "qpid/CommonImportExport.h"
 
 namespace qpid {
-namespace broker {
 
-RateTracker::RateTracker() : currentCount(0), lastCount(0), lastTime(AbsTime::now()) {}
-
-RateTracker& RateTracker::operator++()
+/**
+ * Temporarily disable logging in qpid::Exception constructor.
+ * Used by log::Logger to avoid logging exceptions during Logger construction.
+ */
+struct DisableExceptionLogging
 {
-    ++currentCount;
-    return *this;
-}
+    QPID_COMMON_EXTERN DisableExceptionLogging();
+    QPID_COMMON_EXTERN ~DisableExceptionLogging();
+};
+} // namespace qpid
 
-double RateTracker::sampleRatePerSecond()
-{
-    int32_t increment = currentCount - lastCount;    
-    AbsTime now = AbsTime::now();
-    Duration interval(lastTime, now);
-    lastCount = currentCount;
-    lastTime = now;
-    //if sampling at higher frequency than supported, will just return the number of increments
-    if (interval < TIME_SEC) return increment;
-    else if (increment == 0) return 0;
-    else return increment / (interval / TIME_SEC);
-}
-
-}} // namespace qpid::broker
+#endif  /*!QPID_DISABLEEXCEPTIONLOGGING_H*/

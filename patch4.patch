@@ -1,0 +1,12 @@
+diff --git a/qpid/extras/qmf/src/py/qmf/console.py b/qpid/extras/qmf/src/py/qmf/console.py
+index ecb0e1d..1b08177 100644
+--- a/qpid/extras/qmf/src/py/qmf/console.py
++++ b/qpid/extras/qmf/src/py/qmf/console.py
+@@ -3284,6 +3284,7 @@ class Agent:
+       self.lock.acquire()
+       try:
+         self.contextMap.pop(sequence)
++        self.seqMgr._release(sequence)
+       except KeyError:
+         pass   # @todo - shouldn't happen, log a warning.
+     finally:
