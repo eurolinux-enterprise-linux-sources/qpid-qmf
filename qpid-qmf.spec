@@ -10,7 +10,6 @@
 # NOTE: no more than one of these flags should be set at the same time!
 # RHEL-6 builds (the default) should have all these flags set to 0.
 %global fedora              0
-%global rhel_4              0
 %global rhel_5              0
 
 # LIBRARY VERSIONS
@@ -43,66 +42,56 @@
 #  6. If any interfaces have been removed or changed since the last
 #     public release, then set age to 0.
 
-%global QPIDCOMMON_VERSION_INFO             5:0:0
+%global QPIDCOMMON_VERSION_INFO             6:0:0
 %global QPIDTYPES_VERSION_INFO              3:0:2
-%global QPIDBROKER_VERSION_INFO             5:0:0
-%global QPIDCLIENT_VERSION_INFO             5:0:0
-%global QPIDMESSAGING_VERSION_INFO          4:0:1
+%global QPIDBROKER_VERSION_INFO             6:0:0
+%global QPIDCLIENT_VERSION_INFO             6:0:0
+%global QPIDMESSAGING_VERSION_INFO          5:0:2
+%global RDMAWRAP_VERSION_INFO               6:0:0
+%global SSLCOMMON_VERSION_INFO              6:0:0
+
 %global QMF_VERSION_INFO                    4:0:0
 %global QMF2_VERSION_INFO                   1:0:0
 %global QMFENGINE_VERSION_INFO              4:0:0
 %global QMFCONSOLE_VERSION_INFO             5:0:0
-%global RDMAWRAP_VERSION_INFO               5:0:0
-%global SSLCOMMON_VERSION_INFO              5:0:0
 
 # Single var with all lib version params (except store) for make
 %global LIB_VERSION_MAKE_PARAMS QPIDCOMMON_VERSION_INFO=%{QPIDCOMMON_VERSION_INFO} QPIDTYPES_VERSION_INFO=%{QPIDTYPES_VERSION_INFO} QPIDBROKER_VERSION_INFO=%{QPIDBROKER_VERSION_INFO} QPIDCLIENT_VERSION_INFO=%{QPIDCLIENT_VERSION_INFO} QPIDMESSAGING_VERSION_INFO=%{QPIDMESSAGING_VERSION_INFO} QMF_VERSION_INFO=%{QMF_VERSION_INFO} QMF2_VERSION_INFO=%{QMF2_VERSION_INFO} QMFENGINE_VERSION_INFO=%{QMFENGINE_VERSION_INFO} QMFCONSOLE_VERSION_INFO=%{QMFCONSOLE_VERSION_INFO} RDMAWRAP_VERSION_INFO=%{RDMAWRAP_VERSION_INFO} SSLCOMMON_VERSION_INFO=%{SSLCOMMON_VERSION_INFO}
 
 Name:          qpid-qmf
-Version:       0.12
-Release:       6%{?dist}
+Version:       0.14
+Release:       7%{?dist}
 Summary:       The Qpid Management Framework
 Group:         System Environment/Libraries
 License:       ASL 2.0
 URL:           http://qpid.apache.org
 Vendor:        Red Hat, Inc.
-Source0:       %{name}-%{version}.tar.gz
-Patch0:        unused-result.patch
-Patch1:        mutable.patch
-Patch2:        abi.patch
-Patch3:        patch3.patch
-Patch4:        patch4.patch
-BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+Source0:       qpid-%{version}.tar.gz
+Patch0:        mrg.patch
+Patch1:        s390.patch
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %if %{rhel_5}
 ExclusiveArch: i386 x86_64
 %endif
 
 BuildRequires: boost-devel
-BuildRequires: doxygen
 BuildRequires: libtool
 BuildRequires: pkgconfig
 BuildRequires: ruby
 BuildRequires: ruby-devel
 BuildRequires: python-devel
 BuildRequires: swig
-%if !%{rhel_4}
-BuildRequires: cyrus-sasl-devel
-BuildRequires: cyrus-sasl-lib
-BuildRequires: cyrus-sasl
-%endif
+BuildRequires: nss-devel
+BuildRequires: nspr-devel
+
 %if %{rhel_5}
 BuildRequires: e2fsprogs-devel
 %else
-%if !%{rhel_4}
 BuildRequires: boost-program-options
 BuildRequires: boost-filesystem
 BuildRequires: libuuid-devel
 %endif
-%endif
-
-BuildRequires: nss-devel
-BuildRequires: nspr-devel
 
 
 # === Package: qpid-qmf ===
@@ -157,7 +146,7 @@ components.
 %{_includedir}/qpid/console
 
 
-%ifnarch s390 s390x ppc ppc64
+#%ifnarch s390 s390x ppc ppc64
 # === Package: python-qpid-qmf ===
 %package -n python-qpid-qmf
 Summary:       Python QMF library for Apache Qpid
@@ -182,16 +171,16 @@ Python QMF library for Apache Qpid
 %{python_sitearch}/qmf2.py*
 %{python_sitearch}/cqmf2.py*
 %{python_sitearch}/_cqmf2.so
-%exclude %{python_sitelib}/mllib
-%exclude %{python_sitelib}/qpid
+%exclude %{python_sitearch}/mllib
+%exclude %{python_sitearch}/qpid
 #%exclude %{python_sitelib}/*.egg-info
 
-%endif
+#%endif
 
-%if !%{rhel_4}
 # === Package: ruby-qpid-qmf ===
 
 %ifnarch s390 s390x ppc ppc64
+
 %package -n ruby-qpid-qmf
 Summary:       The QPID Management Framework bindings for ruby
 Group:         System Environment/Libraries
@@ -218,38 +207,22 @@ for ruby.
 %exclude %{ruby_sitearch}/*.la
 
 %endif
-%endif
-#!%{rhel_4}
-
 
 # ===
 
 %prep
-%setup -q
-%patch0 -p0
-%patch2 -p2
-%patch3 -p2
-%patch4 -p2
-%if %{rhel_4}
-(cd cpp/boost-1.32-support; make apply)
-%else
-#%patch1 -p0
-%endif
+%setup -q -n qpid-%{version}
+%patch0 -p2
+%patch1 -p2
 
 %build
-%if %{rhel_4}
-%global swig_flag "--without-swig"
-%else
-%global swig_flag "--with-swig"
-%endif
-
 (
     cd cpp
     ./bootstrap
     export CXXFLAGS="%{optflags} -DNDEBUG -O3"
-    %configure %{swig_flag} --with-sasl --with-ssl \
+    %configure --with-swig --without-sasl --without-ssl \
         --without-help2man --without-cpg --without-libcman --without-xml \
-        --without-rdma
+        --without-rdma --without-doxygen
     %{__make} %{LIB_VERSION_MAKE_PARAMS}
 )
 
@@ -260,22 +233,20 @@ for ruby.
 rm -rf %{buildroot}
 
 (cd cpp; make install DESTDIR=%{buildroot})
-(cd python; %{__python} setup.py install --skip-build --root %{buildroot})
+(cd python; %{__python} setup.py install --skip-build --root %{buildroot} --install-purelib %{python_sitearch})
 (cd extras/qmf; %{__python} setup.py install --skip-build --root %{buildroot} --install-purelib %{python_sitearch})
 
-# Move QMF v.2 files from incorrect libtool locations
-%if !%{rhel_4}
-install -d %{buildroot}%{python_sitelib}
+
+#%ifnarch s390 s390x ppc ppc64
 install -d %{buildroot}%{python_sitearch}
-install -pm 755 %{buildroot}%{_libdir}/_cqpid.so %{buildroot}%{python_sitearch}
-install -pm 755 %{buildroot}%{_libdir}/_qmfengine.so %{buildroot}%{python_sitearch}
-install -pm 755 %{buildroot}%{_libdir}/_cqmf2.so %{buildroot}%{python_sitearch}
-install -pm 644 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf/ruby/qmf.rb %{buildroot}%{ruby_sitelib}
-install -pm 644 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf2/ruby/qmf2.rb %{buildroot}%{ruby_sitelib}
-install -pm 755 %{_builddir}/%{name}-%{version}/cpp/bindings/qpid/ruby/.libs/cqpid.so %{buildroot}%{ruby_sitearch}
-install -pm 755 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf/ruby/.libs/qmfengine.so %{buildroot}%{ruby_sitearch}
-install -pm 755 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf2/ruby/.libs/cqmf2.so %{buildroot}%{ruby_sitearch}
-%endif
+install -pm 644 %{_builddir}/qpid-%{version}/cpp/bindings/qpid/python/cqpid.py %{buildroot}%{python_sitearch}
+install -pm 755 %{_builddir}/qpid-%{version}/cpp/bindings/qpid/python/.libs/_cqpid.so %{buildroot}%{python_sitearch}
+install -pm 644 %{_builddir}/qpid-%{version}/cpp/bindings/qmf/python/*.py %{buildroot}%{python_sitearch}
+install -pm 755 %{_builddir}/qpid-%{version}/cpp/bindings/qmf/python/.libs/_qmfengine.so %{buildroot}%{python_sitearch}
+install -pm 644 %{_builddir}/qpid-%{version}/cpp/bindings/qmf2/python/*.py %{buildroot}%{python_sitearch}
+install -pm 755 %{_builddir}/qpid-%{version}/cpp/bindings/qmf2/python/.libs/_cqmf2.so %{buildroot}%{python_sitearch}
+#%endif
+
 
 shopt -s extglob
 
@@ -291,19 +262,21 @@ rm -fr %{buildroot}%{_sysconfdir}
 rm -fr %{buildroot}%{_datadir}
 rm -fr %{buildroot}%{python_sitelib}/qpid*.egg-info
 rm -fr %{buildroot}%{python_sitearch}/qpid*.egg-info
+rm -fr %{buildroot}%{python_sitelib}/_*.la
 
+#%ifarch s390 s390x ppc ppc64
+#rm -fr %{buildroot}%{python_sitearch}/qmf
+#rm -fr %{buildroot}%{python_sitearch}/cqpid.py*
+#rm -fr %{buildroot}%{python_sitearch}/_cqpid.so
+#rm -fr %{buildroot}%{python_sitearch}/qmf.py*
+#rm -fr %{buildroot}%{python_sitearch}/qmfengine.py*
+#rm -fr %{buildroot}%{python_sitearch}/_qmfengine.so
+#rm -fr %{buildroot}%{python_sitearch}/qmf2.py*
+#rm -fr %{buildroot}%{python_sitearch}/cqmf2.py*
+#rm -fr %{buildroot}%{python_sitearch}/_cqmf2.so
+#rm -fr %{buildroot}%{python_sitearch}/mllib
+#rm -fr %{buildroot}%{python_sitearch}/qpid
 %ifarch s390 s390x ppc ppc64
-rm -fr %{buildroot}%{python_sitearch}/qmf
-rm -fr %{buildroot}%{python_sitearch}/cqpid.py*
-rm -fr %{buildroot}%{python_sitearch}/_cqpid.so
-rm -fr %{buildroot}%{python_sitearch}/qmf.py*
-rm -fr %{buildroot}%{python_sitearch}/qmfengine.py*
-rm -fr %{buildroot}%{python_sitearch}/_qmfengine.so
-rm -fr %{buildroot}%{python_sitearch}/qmf2.py*
-rm -fr %{buildroot}%{python_sitearch}/cqmf2.py*
-rm -fr %{buildroot}%{python_sitearch}/_cqmf2.so
-rm -fr %{buildroot}%{python_sitelib}/mllib
-rm -fr %{buildroot}%{python_sitelib}/qpid
 rm -fr %{buildroot}%{ruby_sitelib}/qmf.rb
 rm -fr %{buildroot}%{ruby_sitelib}/qmf2.rb
 rm -fr %{buildroot}%{ruby_sitearch}/qmfengine.so
@@ -315,35 +288,36 @@ rm -fr %{buildroot}%{ruby_sitearch}/*.la
 %clean
 rm -rf %{buildroot}
 
-
 %changelog
-* Tue Oct 18 2011 Ted Ross <tross@redhat.com> - 0.12-6
-- Related:rhbz#743657
-
-* Fri Sep 16 2011 Ted Ross <tross@redhat.com> - 0.12-5
-- Related:rhbz#699499 - [RFE] qmfv2 must provide mainloop integration
-
-* Mon Aug 15 2011 Ted Ross <tross@redhat.com> - 0.12-4
-- Related:rhbz#681680 - QMF agents wake up several times a second
-- Related:rhbz#699499 - [RFE] qmfv2 must provide mainloop integration
-
-* Mon Aug 15 2011 Ted Ross <tross@redhat.com> - 0.12-3
-- Related:rhbz#681680 - QMF agents wake up several times a second
-
-* Wed Aug 10 2011 Ted Ross <tross@redhat.com> - 0.12-2
-- Related:rhbz#663461 - Enable new architectures
+* Tue Apr 10 2012 Nuno Santos <nsantos@redhat.com> - 0.14-7
+- Updated mrg.patch
+* Fri Mar 16 2012 Nuno Santos <nsantos@redhat.com> - 0.14-6
+- rhbz#801358
+* Thu Mar 15 2012 Nuno Santos <nsantos@redhat.com> - 0.14-5
+- rhbz#745600
+* Fri Feb 10 2012 Nuno Santos <nsantos@redhat.com> - 0.14-4
+- rhbz#765856
+* Thu Dec  8 2011 Nuno Santos <nsantos@redhat.com> - 0.14-2
+- Fixed install paths
+* Tue Nov 29 2011 Justin Ross <jross@redhat.com> - 0.14-1
+- Rebase to 0.14
+- rhbz#743657 - The pure-python QMF console unnecessarily retains
+  references to query results
+- rhbz#699499 - [RFE] qmfv2 must provide mainloop integration
+- rhbz#681680 - QMF agents wake up several times a second
+- rhbz#663461 - Enable new architectures
 - Remove python-qpid-qmf and ruby-qpid-qmf from ppc and s390 architectures
-
-* Mon Aug  8 2011 Ted Ross <tross@redhat.com> - 0.12-1
-- Related:rhbz#706990 - Rebase to Qpid 0.12
-- Related:rhbz#663461 - Enable new architectures
-
-* Fri Jun  3 2011 Ted Ross <tross@redhat.com> - 0.10-10
-- Sync with the RHEL5 build
-- Related:rhbz#710483
-
-* Wed Apr  6 2011 Nuno Santos <nsantos@redhat.com> - 0.10-7
-- Fix python multiarch issues
-
-* Wed Mar 30 2011 Nuno Santos <nsantos@redhat.com> - 0.10-5
+* Mon Oct 31 2011 Justin Ross <jross@redhat.com> - 0.10-11
+- BZs 743657, 748738 - Prevent memory leak in python console
+* Mon May 27 2011 Ted Ross <tross@redhat.com> - 0.10-10
+- BZ 709343 - Packaging problem in qpid-qmf-devel (qmf-gen templates)
+* Mon May 24 2011 Ted Ross <tross@redhat.com> - 0.10-9
+- BZ 707023 - Fix rpmdiff errors
+* Mon May  2 2011 Ted Ross <tross@redhat.com> - 0.10-7
+- BZ 689907 - Fix rpmdiff errors
+* Wed Apr 20 2011 Justin Ross <jross@redhat.com> - 0.10-6
+- BZ 694416 - missing dependency of python-qpid-qmf
+* Wed Mar 30 2011 Nuno Santos <nsantos@redhat.com> - 0.10-3
+- BZ691812
+* Tue Mar 22 2011 Nuno Santos <nsantos@redhat.com> - 0.10-1
 - Initial version of consolidated, renamed qpid-qmf packages

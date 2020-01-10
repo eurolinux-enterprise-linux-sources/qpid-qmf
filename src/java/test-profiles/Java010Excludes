@@ -1,0 +1,92 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
+// Those tests are testing 0.8 specific semantics
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsConsumerDisconnectedNoTxP2P
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsConsumerDisconnectedTxP2P
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsNoRouteNoTxP2P
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsNoRouteTxP2P
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsConsumerDisconnectedNoTxPubSub
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsConsumerDisconnectedTxPubSub
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsNoRouteNoTxPubSub
+org.apache.qpid.test.testcases.ImmediateMessageTest#test_QPID_517_ImmediateFailsNoRouteTxPubSub
+org.apache.qpid.test.testcases.MandatoryMessageTest#test_QPID_508_MandatoryFailsNoRouteNoTxP2P
+org.apache.qpid.test.testcases.MandatoryMessageTest#test_QPID_508_MandatoryFailsNoRouteTxP2P
+org.apache.qpid.test.testcases.MandatoryMessageTest#test_QPID_508_MandatoryFailsNoRouteNoTxPubSub
+org.apache.qpid.test.testcases.MandatoryMessageTest#test_QPID_508_MandatoryFailsNoRouteTxPubSub
+
+//this test checks explicitly for 0-8 flow control semantics
+org.apache.qpid.test.client.FlowControlTest#*
+
+// 0-10 protocol doesn't support message bouncing
+org.apache.qpid.server.exchange.ReturnUnroutableMandatoryMessageTest#*
+
+// 0-10 and 0-9 connections dont generate the exact same logging due to protocol differences
+org.apache.qpid.server.logging.ChannelLoggingTest#testChannelStartsFlowStopped
+org.apache.qpid.server.logging.ChannelLoggingTest#testChannelStartConsumerFlowStarted
+org.apache.qpid.server.logging.SubscriptionLoggingTest#testSubscriptionSuspend
+
+// 0-10 Broker does not have a JMX connection MBean
+org.apache.qpid.management.jmx.ManagementActorLoggingTest#testConnectionCloseViaManagement
+org.apache.qpid.management.jmx.MessageConnectionStatisticsTest#*
+
+// 0-10 is not supported by the MethodRegistry
+org.apache.qpid.test.unit.close.JavaServerCloseRaceConditionTest#*
+
+//QPID-942 : Implemented Channel.Flow based Producer Side flow control to the Java Broker (not in CPP Broker)
+org.apache.qpid.server.queue.ProducerFlowControlTest#*
+
+//QPID-1950 : Commit to test this failure. This is a MINA only failure so it cannot be tested when using 010.
+org.apache.qpid.server.failover.MessageDisappearWithIOExceptionTest#*
+
+//QPID-1864: rollback with subscriptions does not work in 0-10 yet
+org.apache.qpid.test.client.RollbackOrderTest#testOrderingAfterRollbackOnMessage
+
+// This test uses 0-8 channel frames
+org.apache.qpid.test.unit.client.channelclose.ChannelCloseTest#*
+
+//QPID-3422: test fails because ring queue is not implemented on java broker
+org.apache.qpid.test.client.destination.AddressBasedDestinationTest#testBrowseMode
+
+// QPID-3133: On 0-10, the exception listener is currently not invoked when reconnection fails to occurs. 
+org.apache.qpid.server.failover.FailoverMethodTest#*
+
+// QPID-3392: the Java broker does not yet implement exchange creation arguments
+org.apache.qpid.test.client.destination.AddressBasedDestinationTest#testCreateExchangeWithArgs
+org.apache.qpid.test.client.destination.AddressBasedDestinationTest#testSessionCreateTopicWithExchangeArgs
+
+// QPID-1935: the following tests are failing on 0.10 profiles
+org.apache.qpid.test.client.QueueBrowserTransactedTest#testFailoverAsQueueBrowserCreated
+org.apache.qpid.test.client.QueueBrowserTransactedTest#testFailoverWithQueueBrowser
+
+// QPID-3432: These tests test the behaviour of 0-8..-0-9-1 specific system property (amqj.default_syncwrite_timeout)
+org.apache.qpid.test.client.timeouts.SyncWaitTimeoutDelayTest#*
+org.apache.qpid.test.client.timeouts.SyncWaitDelayTest#*
+
+//QPID-3468: exclude QueueBrowser related failover tests
+org.apache.qpid.test.client.QueueBrowserAutoAckTest#testFailoverWithQueueBrowser
+org.apache.qpid.test.client.QueueBrowserAutoAckTest#testFailoverAsQueueBrowserCreated
+org.apache.qpid.test.client.QueueBrowserClientAckTest#testFailoverWithQueueBrowser
+org.apache.qpid.test.client.QueueBrowserClientAckTest#testFailoverAsQueueBrowserCreated
+org.apache.qpid.test.client.QueueBrowserNoAckTest#testFailoverWithQueueBrowser
+org.apache.qpid.test.client.QueueBrowserNoAckTest#testFailoverAsQueueBrowserCreated
+org.apache.qpid.test.client.QueueBrowserPreAckTest#testFailoverWithQueueBrowser
+org.apache.qpid.test.client.QueueBrowserPreAckTest#testFailoverAsQueueBrowserCreated
+org.apache.qpid.test.client.QueueBrowserDupsOkTest#testFailoverWithQueueBrowser
+org.apache.qpid.test.client.QueueBrowserDupsOkTest#testFailoverAsQueueBrowserCreated
