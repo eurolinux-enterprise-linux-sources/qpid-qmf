@@ -1,0 +1,13 @@
+Index: cpp/src/qmf/Agent.cppIndex: cpp/src/qpid/framing/SendContent.h
+===================================================================
+--- cpp/src/qpid/framing/SendContent.h	2009-03-12 16:55:34.000000000 -0400
++++ cpp/src/qpid/framing/SendContent.h	2011-02-07 16:12:01.949172798 -0500
+@@ -37,7 +37,7 @@
+  */
+ class SendContent
+ {
+-    mutable FrameHandler& handler;
++    FrameHandler& handler;
+     const uint16_t maxFrameSize;
+     uint expectedFrameCount;
+     uint frameCount;

@@ -60,24 +60,21 @@
 
 Name:          qpid-qmf
 Version:       0.10
-Release:       6%{?dist}
+Release:       10%{?dist}
 Summary:       The Qpid Management Framework
 Group:         System Environment/Libraries
 License:       ASL 2.0
 URL:           http://qpid.apache.org
 Vendor:        Red Hat, Inc.
 Source0:       %{name}-%{version}.tar.gz
+Patch0:        mrg.patch
+Patch1:        mutable.patch
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 %if %{rhel_5}
 ExclusiveArch: i386 x86_64
 %else
-ExclusiveArch: i386 i686 x86_64
-%endif
-
-%if %{rhel_4}
-Patch0:        swig.patch
-Patch1:        libs.patch
+ExclusiveArch: i686 x86_64
 %endif
 
 BuildRequires: boost-devel
@@ -153,7 +150,7 @@ components.
 %{_libdir}/libqmfengine.so
 %{_libdir}/libqmfconsole.so
 %{_bindir}/qmf-gen
-%{python_sitelib}/qmfgen
+%{python_sitearch}/qmfgen
 %{_includedir}/qmf
 %{_includedir}/qpid/agent
 %{_includedir}/qpid/console
@@ -163,6 +160,9 @@ components.
 %package -n python-qpid-qmf
 Summary:       Python QMF library for Apache Qpid
 Group:         Development/Python
+Requires:      qpid-qmf = %{version}-%{release}
+Requires:      qpid-cpp-client = %{version}
+Requires:      python-qpid = %{version}
 Provides:      python-qmf = %{version}-%{release}
 Obsoletes:     python-qmf < %{version}-%{release}
 
@@ -171,14 +171,14 @@ Python QMF library for Apache Qpid
 
 %files -n python-qpid-qmf
 %defattr(-,root,root,-)
-%{python_sitelib}/qmf
-%{python_sitelib}/cqpid.py*
+%{python_sitearch}/qmf
+%{python_sitearch}/cqpid.py*
 %{python_sitearch}/_cqpid.so
-%{python_sitelib}/qmf.py*
-%{python_sitelib}/qmfengine.py*
+%{python_sitearch}/qmf.py*
+%{python_sitearch}/qmfengine.py*
 %{python_sitearch}/_qmfengine.so
-%{python_sitelib}/qmf2.py*
-%{python_sitelib}/cqmf2.py*
+%{python_sitearch}/qmf2.py*
+%{python_sitearch}/cqmf2.py*
 %{python_sitearch}/_cqmf2.so
 %exclude %{python_sitelib}/mllib
 %exclude %{python_sitelib}/qpid
@@ -221,12 +221,11 @@ for ruby.
 
 %prep
 %setup -q
-
+%patch0 -p2
 %if %{rhel_4}
-%patch0 -p1
-%patch1 -p1
-
 (cd cpp/boost-1.32-support; make apply)
+%else
+%patch1 -p0
 %endif
 
 %build
@@ -254,7 +253,7 @@ rm -rf %{buildroot}
 
 (cd cpp; make install DESTDIR=%{buildroot})
 (cd python; %{__python} setup.py install --skip-build --root %{buildroot})
-(cd extras/qmf; %{__python} setup.py install --skip-build --root %{buildroot})
+(cd extras/qmf; %{__python} setup.py install --skip-build --root %{buildroot} --install-purelib %{python_sitearch})
 
 # Move QMF v.2 files from incorrect libtool locations
 %if !%{rhel_4}
@@ -263,7 +262,6 @@ install -d %{buildroot}%{python_sitearch}
 install -pm 755 %{buildroot}%{_libdir}/_cqpid.so %{buildroot}%{python_sitearch}
 install -pm 755 %{buildroot}%{_libdir}/_qmfengine.so %{buildroot}%{python_sitearch}
 install -pm 755 %{buildroot}%{_libdir}/_cqmf2.so %{buildroot}%{python_sitearch}
-install -pm 644 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf/python/*.py %{buildroot}%{python_sitelib}
 install -pm 644 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf/ruby/qmf.rb %{buildroot}%{ruby_sitelib}
 install -pm 644 %{_builddir}/%{name}-%{version}/cpp/bindings/qmf2/ruby/qmf2.rb %{buildroot}%{ruby_sitelib}
 install -pm 755 %{_builddir}/%{name}-%{version}/cpp/bindings/qpid/ruby/.libs/cqpid.so %{buildroot}%{ruby_sitearch}
@@ -278,16 +276,25 @@ rm -fr %{buildroot}%{_localstatedir}
 rm -fr %{buildroot}%{_mandir}
 rm -fr %{buildroot}%{_bindir}/!(qmf*)
 rm -fr %{buildroot}%{_includedir}/qpid/!(agent|console)
+rm -fr %{buildroot}%{_includedir}/qmf/org
 rm -fr %{buildroot}%{_libexecdir}
 rm -fr %{buildroot}%{_sbindir}
 rm -fr %{buildroot}%{_sysconfdir}
 rm -fr %{buildroot}%{_datadir}
 rm -fr %{buildroot}%{python_sitelib}/qpid*.egg-info
+rm -fr %{buildroot}%{python_sitearch}/qpid*.egg-info
 
 %clean
 rm -rf %{buildroot}
 
 
 %changelog
+* Fri Jun  3 2011 Ted Ross <tross@redhat.com> - 0.10-10
+- Sync with the RHEL5 build
+- Related:rhbz#710483
+
+* Wed Apr  6 2011 Nuno Santos <nsantos@redhat.com> - 0.10-7
+- Fix python multiarch issues
+
 * Wed Mar 30 2011 Nuno Santos <nsantos@redhat.com> - 0.10-5
 - Initial version of consolidated, renamed qpid-qmf packages
